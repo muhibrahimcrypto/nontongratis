@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlixNow — Streaming ala Netflix (Demo)</title>
+  <meta name="description" content="Demo website nonton film ala Netflix menggunakan HTML, CSS, dan JavaScript murni." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0f;
+      --card: #12121a;
+      --muted: #9aa0a6;
+      --text: #e6e7eb;
+      --accent: #e50914; /* Netflix-ish red */
+      --accent-2: #14b8a6;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,Helvetica,sans-serif;background:radial-gradient(1200px 600px at 10% -10%, #1a1a26 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% -10%, #14141c 0%, transparent 65%), var(--bg);color:var(--text)}
+
+    /* Header */
+    .header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(8px);background:linear-gradient(180deg, rgba(10,10,15,.85), rgba(10,10,15,.35) 60%, transparent);
+      border-bottom:1px solid rgba(255,255,255,.06)}
+    .nav{display:flex;align-items:center;gap:16px;max-width:1200px;margin:0 auto;padding:14px 20px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px}
+    .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 20px rgba(229,9,20,.6)}
+    .brand span{font-size:20px}
+
+    .searchbar{display:flex;align-items:center;gap:10px;margin-left:auto}
+    .searchbar input{width:230px;max-width:45vw;background:#0f0f15;border:1px solid rgba(255,255,255,.08);color:var(--text);padding:10px 12px;border-radius:12px;outline:none}
+    .searchbar input::placeholder{color:#7a7a86}
+    .top-actions{display:flex;align-items:center;gap:8px}
+    .btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;background:#1a1a23;color:#eaeaf0;cursor:pointer;transition:transform .05s ease,opacity .2s;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+    .btn:hover{opacity:.9}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:linear-gradient(180deg,#fa233b,#e50914);box-shadow:0 10px 25px rgba(229,9,20,.3)}
+
+    /* Container */
+    .wrap{max-width:1200px;margin:0 auto;padding:20px}
+
+    /* Hero */
+    .hero{position:relative;border-radius:var(--radius);overflow:hidden;min-height:320px;background:linear-gradient(120deg,#1d1d26,#0e0e13)}
+    .hero-media{position:absolute;inset:0;background:radial-gradient(1000px 300px at 60% -20%, rgba(229,9,20,.4), transparent 60%), url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=2000&auto=format&fit=crop') center/cover no-repeat;filter:saturate(110%) contrast(105%)}
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg, rgba(0,0,0,.75) 0%, rgba(0,0,0,.2) 60%, transparent)}
+    .hero-content{position:relative;z-index:1;display:grid;grid-template-columns:1.1fr .9fr;gap:24px;padding:28px}
+    .hero h1{margin:0 0 8px;font-size:40px;line-height:1.1}
+    .hero p{margin:0 0 16px;color:#c9cad3}
+    .tag{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);font-size:13px}
+    .hero .actions{display:flex;gap:10px;margin-top:14px}
+
+    /* Filters */
+    .filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin:22px 0}
+    .field{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px}
+    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .field select,.field input{width:100%;background:#0f0f15;border:1px solid rgba(255,255,255,.08);color:var(--text);padding:10px;border-radius:10px;outline:none}
+
+    /* Grid */
+    .grid{display:grid;grid-template-columns:repeat(6, minmax(0,1fr));gap:14px}
+    @media (max-width:1100px){.grid{grid-template-columns:repeat(5,1fr)}}
+    @media (max-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
+    @media (max-width:700px){.grid{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:520px){.grid{grid-template-columns:repeat(2,1fr)}}
+
+    .card{position:relative;overflow:hidden;border-radius:14px;background:linear-gradient(180deg,#1a1a25,#0e0e14);box-shadow:var(--shadow);cursor:pointer;outline:none}
+    .poster{aspect-ratio:2/3;background:#0f0f15;display:grid;place-items:center;font-weight:700;font-size:18px;color:#cbd0d9;letter-spacing:.2px}
+    .poster[data-poster]{background-size:cover;background-position:center;filter:saturate(110%)}
+    .card .gradient{position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,.9));opacity:.8}
+    .meta{position:absolute;left:8px;right:8px;bottom:8px;display:flex;justify-content:space-between;align-items:flex-end}
+    .badge{font-size:12px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);padding:6px 8px;border-radius:999px}
+
+    .title{font-size:14px;font-weight:700;margin:6px 0 0}
+    .sub{font-size:12px;color:#c3c6cf}
+
+    /* Modal */
+    dialog{width:min(920px,94vw);border:1px solid rgba(255,255,255,.08);border-radius:20px;background:#0b0b10;color:var(--text);box-shadow:0 40px 80px rgba(0,0,0,.5)}
+    dialog::backdrop{background:rgba(0,0,0,.75)}
+    .modal{display:grid;grid-template-columns:1.2fr .8fr}
+    @media (max-width:820px){.modal{grid-template-columns:1fr}}
+    .modal-media{position:relative;aspect-ratio:16/9;background:#0f0f15}
+    .modal-body{padding:16px 18px 20px}
+    .modal h3{margin:4px 0 8px}
+    .modal .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{font-size:12px;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08)}
+    .modal .actions{display:flex;gap:10px;margin-top:12px}
+    .close-x{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(4px);width:38px;height:38px;border-radius:999px;display:grid;place-items:center;color:#f1f3f5;cursor:pointer}
+
+    .empty{padding:40px;text-align:center;color:#c1c6d0;border:1px dashed rgba(255,255,255,.12);border-radius:16px}
+    .footer{opacity:.7;text-align:center;font-size:12px;margin:26px 0}
+  </style>
+</head>
+<body>
+  <header class="header" role="banner">
+    <nav class="nav" aria-label="Navigasi utama">
+      <div class="brand" aria-label="FlixNow home">
+        <div class="dot" aria-hidden="true"></div>
+        <span>FlixNow</span>
+      </div>
+      <button class="btn" id="nav-all" aria-pressed="true">Semua</button>
+      <button class="btn" id="nav-mylist" aria-pressed="false">Daftar Saya</button>
+      <div class="searchbar">
+        <input type="search" id="q" placeholder="Cari judul, genre, tahun…" aria-label="Cari" />
+        <div class="top-actions">
+          <button class="btn" id="clear">Bersihkan</button>
+          <button class="btn primary" id="randomPlay">Putar Acak</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap" id="app" tabindex="-1">
+    <section class="hero" aria-label="Sorotan">
+      <div class="hero-media"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div>
+          <span class="tag">✨ Rilis Unggulan</span>
+          <h1 id="heroTitle">Judul Film</h1>
+          <p id="heroDesc">Deskripsi singkat akan tampil di sini. Klik "Putar" untuk menonton trailer YouTube di dalam modal.</p>
+          <div class="actions">
+            <button class="btn primary" id="heroPlay">▶ Putar</button>
+            <button class="btn" id="heroAdd">＋ Tambah ke Daftar</button>
+          </div>
+        </div>
+        <div>
+          <div class="filters" aria-label="Filter film">
+            <div class="field">
+              <label for="genre">Genre</label>
+              <select id="genre">
+                <option value="">Semua</option>
+                <option>Action</option>
+                <option>Drama</option>
+                <option>Comedy</option>
+                <option>Sci-Fi</option>
+                <option>Animation</option>
+                <option>Thriller</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ratingMin">Rating minimal</label>
+              <input type="number" id="ratingMin" min="0" max="10" step="0.1" value="0" />
+            </div>
+            <div class="field">
+              <label for="yearFrom">Tahun dari</label>
+              <input type="number" id="yearFrom" min="1970" max="2030" value="2000" />
+            </div>
+            <div class="field">
+              <label for="sortBy">Urutkan</label>
+              <select id="sortBy">
+                <option value="popular">Paling Populer</option>
+                <option value="rating">Rating Tertinggi</option>
+                <option value="year">Tahun Terbaru</option>
+                <option value="title">Judul (A→Z)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <h2 style="margin:16px 4px">Semua Film</h2>
+    <section class="grid" id="grid" aria-live="polite"></section>
+    <div id="emptyState" class="empty" hidden>⚠️ Tidak ada hasil. Coba ubah kata kunci, filter, atau pengurutan.</div>
+
+    <footer class="footer">Demo UI. Video diputar menggunakan embed YouTube (trailer). Simpanan "Daftar Saya" menggunakan LocalStorage di browser Anda.</footer>
+  </main>
+
+  <!-- Modal Detail & Player -->
+  <dialog id="dlg">
+    <div class="modal">
+      <div class="modal-media">
+        <iframe id="player" title="YouTube player" width="100%" height="100%" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        <button class="close-x" id="closeDlg" aria-label="Tutup">✕</button>
+      </div>
+      <div class="modal-body">
+        <h3 id="mTitle">—</h3>
+        <div class="sub" id="mMeta">—</div>
+        <p id="mDesc" style="color:#cbd0d9">—</p>
+        <div class="chips" id="mChips"></div>
+        <div class="actions">
+          <button class="btn primary" id="mPlay">▶ Putar</button>
+          <button class="btn" id="mToggleList">＋ Tambah ke Daftar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    // ====== Data contoh (bisa Anda ganti/ambil dari API) ======
+    const MOVIES = [
+      {id:1,title:'Neon Skies',year:2024,genre:'Sci-Fi',rating:8.2,duration:122,yt:'i8g7Yp',
+        desc:'Pilot muda menembus badai ion untuk menyelamatkan koloni orbit dari bencana energi.'},
+      {id:2,title:'Crimson Heist',year:2023,genre:'Thriller',rating:7.8,duration:109,yt:'A2b9Zm',
+        desc:'Perampokan berlapis teka-teki di museum bawah tanah kota tua — satu petunjuk mengubah segalanya.'},
+      {id:3,title:'lion king',year:2019,genre:'Comedy',rating:7.1,duration:101,yt:'g_z-Fa-hgyk',
+        desc:'Komika gagal berpura-pura sukses ketika acara TV reality tiba-tiba mendongkraknya.'},
+      {id:4,title:'minicraft movie',year:2025,genre:'Drama',rating:8.6,duration:118,yt:'g901g49EJ60',
+        desc:'Kisah keluarga perajin besi yang bertahan di tengah kota yang akan ditutup tambangnya.'},
+      {id:5,title:'Vector Zero',year:2021,genre:'Action',rating:7.4,duration:112,yt:'Z9qfM1',
+        desc:'Agen bayangan menghentikan jaringan drone ilegal yang mengancam ruang udara sipil.'},
+      {id:6,title:'Orbiters',year:2019,genre:'Sci-Fi',rating:7.0,duration:115,yt:'Q2x8Vr',
+        desc:'Empat sahabat membangun satelit amatir yang menangkap sesuatu yang tak seharusnya.'},
+      {id:7,title:'Paper Tigers',year:2020,genre:'Comedy',rating:7.9,duration:104,yt:'pTig3r',
+        desc:'Tiga mantan juara wushu reuni demi menyelamatkan dojo tua mereka.'},
+      {id:8,title:'Silent Current',year:2018,genre:'Thriller',rating:7.2,duration:107,yt:'Si1Cur',
+        desc:'Penyelam kabel laut menemukan stasiun rahasia di palung terdalam Pasifik.'},
+      {id:9,title:'Pixel Princess',year:2024,genre:'Animation',rating:8.1,duration:97,yt:'PxPrnS',
+        desc:'Putri dari kerajaan 8-bit menembus dunia 3D untuk menyelamatkan ayahnya.'},
+      {id:10,title:'Afterlight',year:2017,genre:'Drama',rating:7.6,duration:110,yt:'AftrLt',
+        desc:'Seorang fotografer buta warna belajar melihat dunia melalui suara dan bayangan.'},
+      {id:11,title:'Last Train East',year:2025,genre:'Action',rating:8.0,duration:119,yt:'LTrnE',
+        desc:'Aksi tanpa henti di atas kereta hipersonik yang melaju melintasi gurun garam.'},
+      {id:12,title:'Quantum Cafe',year:2023,genre:'Sci-Fi',rating:7.9,duration:102,yt:'QntmC',
+        desc:'Barista yang bisa melompat waktu hanya 90 detik ke masa lalu — cukup untuk mengubah nasib.'},
+    ].map(m => ({...m, poster:`linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.0)), url('data:image/svg+xml;utf8,${encodeURIComponent(svgPoster(m.title))}')`}));
+
+    function svgPoster(title){
+      return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 900'>
+        <defs>
+          <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
+            <stop offset='0%' stop-color='%23222'/>
+            <stop offset='100%' stop-color='%230a0a0f'/>
+          </linearGradient>
+        </defs>
+        <rect width='100%' height='100%' fill='url(%23g)'/>
+        <g font-family='Inter, sans-serif' fill='white'>
+          <text x='40' y='140' font-size='44' font-weight='800'>FlixNow</text>
+          <text x='40' y='210' font-size='26' fill='#cbd0d9'>${title}</text>
+          <rect x='40' y='750' width='180' height='46' rx='12' fill='%23e50914'/>
+          <text x='62' y='782' font-size='20' font-weight='700'>▶ Putar</text>
+        </g>
+      </svg>`;
+    }
+
+    // ====== State & helpers ======
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    const state = {
+      q: '',
+      genre: '',
+      ratingMin: 0,
+      yearFrom: 2000,
+      sortBy: 'popular',
+      tab: 'all', // all | mylist
+      hero: null,
+      myList: new Set(JSON.parse(localStorage.getItem('myListIds')||'[]')),
+    };
+
+    function saveList(){
+      localStorage.setItem('myListIds', JSON.stringify([...state.myList]));
+    }
+
+    function sortMovies(arr){
+      switch(state.sortBy){
+        case 'rating': return arr.sort((a,b)=>b.rating-a.rating);
+        case 'year': return arr.sort((a,b)=>b.year-a.year);
+        case 'title': return arr.sort((a,b)=>a.title.localeCompare(b.title));
+        case 'popular': default: return arr.sort((a,b)=> (b.rating*2 + b.year/1000) - (a.rating*2 + a.year/1000));
+      }
+    }
+
+    function applyFilters(){
+      let list = [...MOVIES];
+      if(state.tab==='mylist') list = list.filter(m=>state.myList.has(m.id));
+      if(state.q){
+        const q = state.q.toLowerCase();
+        list = list.filter(m => m.title.toLowerCase().includes(q) || m.genre.toLowerCase().includes(q) || String(m.year).includes(q));
+      }
+      if(state.genre) list = list.filter(m=>m.genre===state.genre);
+      list = list.filter(m=>m.rating>=state.ratingMin && m.year>=state.yearFrom);
+      return sortMovies(list);
+    }
+
+    // ====== Render grid ======
+    function render(){
+      const list = applyFilters();
+      const grid = $('#grid');
+      grid.innerHTML = '';
+
+      $('#emptyState').hidden = list.length>0;
+
+      for(const m of list){
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.tabIndex = 0;
+        card.setAttribute('role','button');
+        card.setAttribute('aria-label', `${m.title} (${m.year}) — ${m.genre}, rating ${m.rating}`);
+        card.addEventListener('click', ()=>openModal(m));
+        card.addEventListener('keypress', (e)=>{ if(e.key==='Enter') openModal(m) });
+
+        const poster = document.createElement('div');
+        poster.className = 'poster';
+        poster.dataset.poster = '';
+        poster.style.backgroundImage = m.poster;
+
+        const gradient = document.createElement('div');
+        gradient.className = 'gradient';
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `
+          <div>
+            <div class='badge'>⭐ ${m.rating.toFixed(1)}</div>
+            <div class='title'>${m.title}</div>
+            <div class='sub'>${m.year} • ${m.genre}</div>
+          </div>
+          <div>
+            <button class='btn' onclick='event.stopPropagation(); toggleList(${m.id})'>${state.myList.has(m.id)?'– Hapus':'＋ Simpan'}</button>
+          </div>`;
+
+        poster.appendChild(gradient);
+        card.appendChild(poster);
+        card.appendChild(meta);
+        grid.appendChild(card);
+      }
+
+      // Update hero
+      if(!state.hero || !list.includes(state.hero)) state.hero = list[0] || MOVIES[0];
+      updateHero();
+
+      // Toggle nav buttons pressed state
+      $('#nav-all').setAttribute('aria-pressed', state.tab==='all');
+      $('#nav-mylist').setAttribute('aria-pressed', state.tab==='mylist');
+    }
+
+    function updateHero(){
+      if(!state.hero) return;
+      $('#heroTitle').textContent = state.hero.title;
+      $('#heroDesc').textContent = state.hero.desc;
+      $('#heroPlay').onclick = ()=> openModal(state.hero, true);
+      $('#heroAdd').onclick = ()=> toggleList(state.hero.id);
+    }
+
+    // ====== Modal ======
+    const dlg = $('#dlg');
+    const player = $('#player');
+
+    function openModal(movie, autoplay=false){
+      $('#mTitle').textContent = movie.title;
+      $('#mMeta').textContent = `${movie.year} • ${movie.genre} • ${movie.duration} menit • ⭐ ${movie.rating.toFixed(1)}`;
+      $('#mDesc').textContent = movie.desc;
+      $('#mChips').innerHTML = `<span class='chip'>${movie.genre}</span><span class='chip'>${movie.year}</span><span class='chip'>Rating ${movie.rating.toFixed(1)}</span>`;
+      const url = `https://www.youtube.com/embed/${movie.yt}?rel=0&modestbranding=1&playsinline=1${autoplay?'&autoplay=1':''}`;
+      player.src = url;
+      $('#mToggleList').textContent = state.myList.has(movie.id)?'– Hapus dari Daftar':'＋ Tambah ke Daftar';
+      $('#mToggleList').onclick = ()=>{ toggleList(movie.id); openModal(movie, false); };
+      $('#mPlay').onclick = ()=> openModal(movie, true);
+      dlg.showModal();
+    }
+    $('#closeDlg').addEventListener('click', closeModal);
+    dlg.addEventListener('close', ()=> player.src='');
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && dlg.open) closeModal(); });
+    function closeModal(){ player.src=''; dlg.close(); }
+
+    // ====== Actions ======
+    function toggleList(id){
+      if(state.myList.has(id)) state.myList.delete(id); else state.myList.add(id);
+      saveList();
+      render();
+    }
+
+    // Search & filters
+    $('#q').addEventListener('input', e=>{ state.q = e.target.value.trim(); render(); });
+    $('#clear').addEventListener('click', ()=>{ state.q=''; $('#q').value=''; render(); });
+    $('#genre').addEventListener('change', e=>{ state.genre = e.target.value; render(); });
+    $('#ratingMin').addEventListener('change', e=>{ state.ratingMin = Number(e.target.value)||0; render(); });
+    $('#yearFrom').addEventListener('change', e=>{ state.yearFrom = Number(e.target.value)||1970; render(); });
+    $('#sortBy').addEventListener('change', e=>{ state.sortBy = e.target.value; render(); });
+
+    // Tabs
+    $('#nav-all').addEventListener('click', ()=>{ state.tab='all'; render(); });
+    $('#nav-mylist').addEventListener('click', ()=>{ state.tab='mylist'; render(); });
+
+    // Random play
+    $('#randomPlay').addEventListener('click', ()=>{
+      const list = applyFilters();
+      const pick = list[Math.floor(Math.random()*list.length)] || MOVIES[0];
+      openModal(pick, true);
+    });
+
+    // Init
+    render();
+  </script>
+</body>
+</html>
